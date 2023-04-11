@@ -1,0 +1,124 @@
+---
+title: "roadrage"
+author: "Olivier Haley"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Deliverables:
+
+- Mental Health
+    - Seek out high quality data across the country and apply ML to determine figures for other provinces
+    
+- Road Rage:
+  - Seek out high quality data across the country and apply ML to determine figures for other provinces
+- Using ML workflow to create connections between Mental Health and Road Rage
+- "Outcome": Visual showing predictions for the two topics alongside one another
+- Potential Sources: CIHI, Stats can, CMHA
+- NCDB
+
+```{r}
+x <- read.csv(url("https://data.calgary.ca/api/views/35ra-9556/rows.csv?accessType=DOWNLOAD")) 
+```
+
+```{r}
+df <- x %>% 
+  dplyr::mutate(date = START_DT) %>% 
+  dplyr::mutate(date = format(as.Date(date, "%Y/%m/%d %I:%M:%S %p"), "%Y")) %>% 
+  dplyr::select(date, Count) %>% 
+  group_by(date) %>% 
+  summarise(count = n())
+
+df
+x
+```
+
+
+```{r}
+url <- "https://data.calgary.ca/Transportation-Transit/Traffic-Incidents/35ra-9556"
+
+page <- read_html(url)
+page
+table<- page %>% 
+  rvest::html_elements(css = )
+
+table
+```
+
+```{r}
+library(jsonlite)
+library(tidyverse)
+url <- "https://data.calgary.ca/resource/35ra-9556.json"
+res <- httr::GET(url = url)
+# Extracting content
+out <- httr::content(x = res, type = "text", encoding = "UTF-8")
+# Converting json object to R object
+x <- jsonlite::fromJSON(out) 
+x
+
+
+```
+
+
+```{r}
+library(jsonlite)
+library(tidyverse)
+url <- "https://data.cdc.gov/resource/8pt5-q6wp.json"
+res <- httr::GET(url = url)
+# Extracting content
+out <- httr::content(x = res, type = "text", encoding = "UTF-8")
+# Converting json object to R object
+x <- jsonlite::fromJSON(out) %>% 
+  dplyr::select(indicator, state, time_period_label, value)
+x
+
+
+```
+
+
+
+```{r}
+library(jsonlite)
+library(tidyverse)
+url <- "https://crashviewer.nhtsa.dot.gov/CrashAPI/crashes/GetCaseDetails?stateCase=10003&caseYear=2014&state=1&format=json"
+res <- httr::GET(url = url)
+# Extracting content
+out <- httr::content(x = res, type = "text", encoding = "UTF-8")
+# Converting json object to R object
+x <- jsonlite::fromJSON(out) #%>% 
+  #dplyr::select(indicator, state, time_period_label, value)
+x
+
+
+```
+
+
+
+```{r}
+library(jsonlite)
+library(tidyverse)
+url <- "https://crashviewer.nhtsa.dot.gov/CrashAPI/analytics/GetInjurySeverityCounts?fromCaseYear=2010&toCaseYear=2021&state=1&format=json"
+res <- httr::GET(url = url)
+# Extracting content
+out <- httr::content(x = res, type = "text", encoding = "UTF-8")
+# Converting json object to R object
+x <- jsonlite::fromJSON(out) #%>% 
+  #dplyr::select(indicator, state, time_period_label, value)
+x
+
+
+```
+
+
+```{r}
+fig.title = "SPY Options - Static"
+url = "https://finance.yahoo.com/quote/SPY/options?date=1686873600"
+page <- rvest::read_html(url)
+calls <- page  %>% rvest::html_table() 
+calls
+```
+
