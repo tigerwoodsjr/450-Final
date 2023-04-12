@@ -24,10 +24,11 @@ x <- read.csv(url("https://data.calgary.ca/api/views/35ra-9556/rows.csv?accessTy
 
 ```{r}
 df <- x %>% 
-  dplyr::mutate(date = START_DT) %>% 
-  dplyr::mutate(date = format(as.Date(date, "%Y/%m/%d %I:%M:%S %p"), "%Y")) %>% 
-  dplyr::select(date, Count) %>% 
-  group_by(date) %>% 
+  dplyr::mutate(year = format(as.Date(START_DT, "%Y/%m/%d %I:%M:%S %p"), "%Y")) %>% 
+  dplyr::mutate(month = format(as.Date(START_DT, "%Y/%m/%d %I:%M:%S %p"), "%m")) %>% 
+
+  dplyr::select(year, month, Count) %>% 
+  group_by(year, month) %>% 
   summarise(count = n())
 
 df
