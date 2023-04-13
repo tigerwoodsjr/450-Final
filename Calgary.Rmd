@@ -10,27 +10,65 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r setup, include=FALSE}
+```{r}
 library(httr)
 library(tidyverse)
 library(rvest)
 library(jsonlite)
 library(tidyr)
+library(RSelenium)
 ```
 
+
 ```{r}
-x <- read.csv(url("https://data.calgary.ca/api/views/35ra-9556/rows.csv?accessType=DOWNLOAD")) 
+fig.title = "Calgary Incidents"
+url = "https://data.calgary.ca/Transportation-Transit/Traffic-Incidents/35ra-9556"
+# Define month and year of expiry
+m = "Jun"
+y = 2023
+# Start RSelenium and Navigate to the page
+#binman::rm_platform("phantomjs")
+#wdman::selenium(retcommand = TRUE)
+rD <- rsDriver(browser = "firefox", chromever = NULL, verbose = FALSE)
+remDr <- rD$client
+rD$server$log()
+remDr$open()
+remDr$navigate(url)
+Sys.sleep(2)
+# find the right elements in Developer Mode
+# this is the "select class = "Fz(s) H(25px) Bd Bdc($seperatorColor)" heading
+download_button <- remDr$findElement(using = 'xpath', '/html/body/main/div/div[1]/div/div[1]/div/div/div[1]/div/div[2]/div/div[2]/button')
+download_button$clickElement()
+
+path_1 <- remDr$findElement(using = 'xpath', '/html/body/main/div/div[1]/div/div[1]/div/div/div[1]/div/div[2]/div/div[2]/div/section/ul/li[1]/a') 
+get <- path_1$getElementAttribute("href")
+url_1 <- get[[1]]
+x <- read.csv(url(url_1))
+
+url_w = "https://calgary.weatherstats.ca/download.html"
+remDr$navigate(url_w)
+Sys.sleep(2)
+select = remDr$findElement(using = 'xpath', '//*[@id="form_download"]/label[4]/input')
+select$clickElement()
+
 ```
+
 
 ```{r}
 df <- x %>% 
   dplyr::mutate(year = format(as.Date(START_DT, "%Y/%m/%d %I:%M:%S %p"), "%Y")) %>% 
   dplyr::mutate(month = format(as.Date(START_DT, "%Y/%m/%d %I:%M:%S %p"), "%m")) %>% 
-
   dplyr::select(year, month, Count) %>% 
   group_by(year, month) %>% 
-  summarise(count = n())
-
+  summarise(count = n()) %>% 
+  na.omit()
 df
-x
 ```
+
+
+```{r}
+# Close the connection the last time in your .Rmd you are using it.
+remDr$close()
+rD[["server"]]$stop()
+```
+
