@@ -41,15 +41,25 @@ download_button <- remDr$findElement(using = 'xpath', '/html/body/main/div/div[1
 download_button$clickElement()
 
 path_1 <- remDr$findElement(using = 'xpath', '/html/body/main/div/div[1]/div/div[1]/div/div/div[1]/div/div[2]/div/div[2]/div/section/ul/li[1]/a') 
+
 get <- path_1$getElementAttribute("href")
 url_1 <- get[[1]]
-x <- read.csv(url(url_1))
 
+x <- read.csv(url(url_1))
+```
+
+```{r}
 url_w = "https://calgary.weatherstats.ca/download.html"
-remDr$navigate(url_w)
-Sys.sleep(2)
-select = remDr$findElement(using = 'xpath', '//*[@id="form_download"]/label[4]/input')
-select$clickElement()
+r <- POST(url_w, body = list(limit = 1000, type = "normal_monthly", submit = "Downlaod", formdata = "ok"), encode = "form") 
+r
+df <- read.csv(text = content(r, "text"), stringsAsFactors = FALSE)
+df
+```
+
+```{r}
+clean_df <- df %>% 
+  dplyr::select(date, "min_temperature_v", "snow_on_ground_v")
+clean_df
 
 ```
 
@@ -63,6 +73,7 @@ df <- x %>%
   summarise(count = n()) %>% 
   na.omit()
 df
+x2
 ```
 
 
@@ -71,4 +82,7 @@ df
 remDr$close()
 rD[["server"]]$stop()
 ```
+
+
+
 
