@@ -45,43 +45,52 @@ path_1 <- remDr$findElement(using = 'xpath', '/html/body/main/div/div[1]/div/div
 get <- path_1$getElementAttribute("href")
 url_1 <- get[[1]]
 
-x <- read.csv(url(url_1))
+df_crash <- read.csv(url(url_1))
+# Close the connection the last time in your .Rmd you are using it.
+remDr$close()
+rD[["server"]]$stop()
+df_crash
 ```
 
 ```{r}
 url_w = "https://calgary.weatherstats.ca/download.html"
 r <- POST(url_w, body = list(limit = 1000, type = "normal_monthly", submit = "Downlaod", formdata = "ok"), encode = "form") 
 r
-df <- read.csv(text = content(r, "text"), stringsAsFactors = FALSE)
-df
+all_weather_df <- read.csv(text = content(r, "text"), stringsAsFactors = FALSE)
 ```
 
 ```{r}
-clean_df <- df %>% 
+weather_df <- all_weather_df %>% 
+  dplyr::mutate(date = format(as.Date(date, format = "%Y-%m-%d"), "%Y-%m")) %>% 
   dplyr::select(date, "min_temperature_v", "snow_on_ground_v")
-clean_df
+weather_df
 
 ```
 
 
 ```{r}
 df <- x %>% 
-  dplyr::mutate(year = format(as.Date(START_DT, "%Y/%m/%d %I:%M:%S %p"), "%Y")) %>% 
-  dplyr::mutate(month = format(as.Date(START_DT, "%Y/%m/%d %I:%M:%S %p"), "%m")) %>% 
-  dplyr::select(year, month, Count) %>% 
-  group_by(year, month) %>% 
+  dplyr::mutate(date = format(as.Date(START_DT, format = "%Y/%m/%d"), "%Y-%m-%d")) %>% 
+  dplyr::filter(date <= as.Date("2023-03-31")) %>% 
+  dplyr::mutate(date = format(as.Date(date, format = "%Y-%m-%d"), "%Y-%m")) %>% 
+  dplyr::select(date, Count) %>% 
+  group_by(date) %>% 
   summarise(count = n()) %>% 
   na.omit()
 df
-x2
+x
 ```
 
 
 ```{r}
-# Close the connection the last time in your .Rmd you are using it.
-remDr$close()
-rD[["server"]]$stop()
+complete_df <- merge(df, weather_df, by = "date", all = TRUE) %>% 
+  na.omit() %>% 
+  subset(count!=1)
+complete_df
 ```
+
+
+
 
 
 
